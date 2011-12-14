@@ -10,6 +10,8 @@
 #import "TileMillBrowserWindowController.h"
 #import "TileMillPrefsWindowController.h"
 
+#import "Sparkle.h"
+
 #import "PFMoveApplication.h"
 
 @interface TileMillAppDelegate ()
@@ -58,6 +60,12 @@
     //
     PFMoveToApplicationsFolderIfNecessary();
 
+    // definitively set Sparkle updater delegate in code
+    //
+    NSAssert( ! [[SUUpdater sharedUpdater] delegate], @"Sparkle updater delegate should only be set in code since in multiple XIBs");
+    
+    [[SUUpdater sharedUpdater] setDelegate:self];
+    
     // setup logging & fire up main functionality
     //
     self.logPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/TileMill.log"];
@@ -279,6 +287,72 @@
 - (void)childProcessDidSendFirstData:(TileMillChildProcess *)process;
 {
     [self.browserController loadInitialRequestWithPort:self.searchTask.port];
+}
+
+#pragma mark -
+#pragma mark SUUpdaterDelegate
+
+- (void)updater:(SUUpdater *)updater didFinishLoadingAppcast:(SUAppcast *)appcast
+{
+    // Borrowed a bit from SUUpdater as a way to get this stuff outside of the feed URL.
+    // A little hacky with KVC stuff, but it'll do the trick.
+    //
+    BOOL sendingSystemProfile = [updater sendsSystemProfile];
+
+    NSDate *lastSubmitDate = [[NSUserDefaults standardUserDefaults] objectForKey:@"SULastProfileSubmitDateKey"];
+    
+    if ( ! lastSubmitDate)
+        lastSubmitDate = [NSDate distantPast];
+    
+    const NSTimeInterval oneWeek = 60 * 60 * 24 * 7;
+    
+    sendingSystemProfile &= (-[lastSubmitDate timeIntervalSinceNow] >= oneWeek);
+
+    NSArray *parameters = [NSArray array];
+    
+    if ([self respondsToSelector:@selector(feedParametersForUpdater:sendingSystemProfile:)])
+        parameters = [parameters arrayByAddingObjectsFromArray:[self feedParametersForUpdater:updater sendingSystemProfile:sendingSystemProfile]];
+
+    if (sendingSystemProfile)
+        parameters = [parameters arrayByAddingObjectsFromArray:[updater valueForKeyPath:@"host.systemProfile"]];
+
+    if ([parameters count])
+    {
+        NSMutableString *profileURLString = [NSMutableString stringWithString:@"http://mapbox.com/tilemill/platforms/osx/profile.html?"];
+
+        NSMutableArray *fields = [NSMutableArray array];
+
+        for (NSDictionary *item in parameters)
+            [fields addObject:[NSString stringWithFormat:@"%@=%@", [item objectForKey:@"displayKey"], [item objectForKey:@"displayValue"]]];
+        
+        [profileURLString appendString:[fields componentsJoinedByString:@"&"]];
+        
+        NSWindow *profileWindow = [[NSWindow alloc] initWithContentRect:NSZeroRect 
+                                                              styleMask:NSBorderlessWindowMask 
+                                                                backing:NSBackingStoreRetained
+                                                                  defer:NO];
+        
+        WebView *profileWebView = [[[WebView alloc] initWithFrame:profileWindow.frame frameName:nil groupName:nil] autorelease];
+        
+        profileWebView.frameLoadDelegate = self;
+        
+        [profileWindow.contentView addSubview:profileWebView];
+        
+        [profileWebView.mainFrame loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:[profileURLString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]]];
+    }
+}
+
+#pragma mark -
+#pragma mark WebFrameLoadDelegate
+
+- (void)webView:(WebView *)sender didFailLoadWithError:(NSError *)error forFrame:(WebFrame *)frame
+{
+    [frame.webView.window close];
+}
+
+- (void)webView:(WebView *)sender didFinishLoadForFrame:(WebFrame *)frame
+{
+    [frame.webView.window close];
 }
 
 @end
