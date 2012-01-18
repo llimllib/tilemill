@@ -62,6 +62,9 @@ model.prototype.schema = {
         },
         'error': {
             'type': 'string'
+        },
+        'skipblank': {
+            'type': 'boolean'
         }
     }
 };

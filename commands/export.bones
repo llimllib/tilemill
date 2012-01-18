@@ -53,6 +53,12 @@ command.options['log'] = {
     'description': 'Write crash logs to destination directory.'
 };
 
+command.options['skipblank'] = {
+    'title': 'skipblank=1|0',
+    'description': 'Skip blank tiles when exporting to MBTiles.',
+    'default': false
+};
+
 command.prototype.initialize = function(plugin, callback) {
     _(this).bindAll('error', 'put', 'complete');
 
@@ -62,6 +68,7 @@ command.prototype.initialize = function(plugin, callback) {
     opts.files = path.resolve(opts.files);
     opts.project = plugin.argv._[1];
     opts.filepath = path.resolve(plugin.argv._[2]);
+    opts.skipblank = Boolean(opts.skipblank);
     callback = callback || function() {};
     this.opts = opts;
 
@@ -266,7 +273,8 @@ command.prototype.mbtiles = function (project, callback) {
             maxZoom: project.mml.maxzoom,
             concurrency: 100,
             tiles: true,
-            grids: !!project.mml.interactivity
+            grids: !!project.mml.interactivity,
+            skipBlank: cmd.opts.skipblank
         });
 
         var done = false;

@@ -41,6 +41,7 @@ function start(id, callback) {
         if (data.height) args.push('--height=' + data.height);
         if (!_(data.minzoom).isUndefined()) args.push('--minzoom=' + data.minzoom);
         if (!_(data.maxzoom).isUndefined()) args.push('--maxzoom=' + data.maxzoom);
+        if (data.skipblank) args.push('--skipblank=1');
 
         var child = spawn(process.execPath, args, {
             env: _(process.env).extend({
