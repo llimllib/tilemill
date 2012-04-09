@@ -22,42 +22,43 @@
     "licenses": [{ "type": "BSD" }],
     "dependencies": {
         "backbone-dirty": "1.1.x",
-        "bones": "~1.3.20",
+        "bones": "~1.3.24",
         "chrono": "~1.0.1",
         "JSV": "3.5.x",
-        "mbtiles": "~0.1.2",
+        "mbtiles": "~0.2.0",
         "sax": "0.1.x",
-        "request": "1.9.x",
-        "step": "0.0.x",
-        "tilelive": "~4.0.3",
-        "mapnik": "https://github.com/mapnik/node-mapnik/tarball/node_v4",
-        "millstone": "~0.3.0",
+        "request": "~2.9.153",
+        "step": "~0.0.5",
+        "eio": "https://github.com/developmentseed/node-eio/tarball/master",
+        "tilelive": "https://github.com/mapbox/tilelive.js/tarball/master",
+        "mapnik": "https://github.com/mapnik/node-mapnik/tarball/master",
+        "millstone": "https://github.com/mapbox/millstone/tarball/master",
         "sphericalmercator": "~1.0.1",
-        "tilelive-mapnik": "~0.2.0",
-        "underscore": "1.1.x",
-        "carto": "~0.4.3",
+        "tilelive-mapnik": "~0.3.0",
+        "underscore": "~1.3.1",
+        "carto": "~0.4.5",
         "wax": "5.0.0-alpha2",
         "node-markdown": "0.1.0",
-        "sqlite3": "~2.0.16",
+        "sqlite3": "~2.1.1",
         "passport": "0.1.x",
         "passport-oauth": "0.1.x",
         "modestmaps": "1.0.0-alpha",
-        "npm": "1.0.x",
+        "npm": "1.1.x",
         "semver": "1.0.x",
-        "optimist": "0.1.x",
-        "topcube": "https://github.com/creationix/topcube/tarball/master",
-        "mkdirp": "~0.2.1"
+        "optimist": "~0.3.1",
+        "topcube": "https://github.com/creationix/topcube/tarball/v0.1.2",
+        "mkdirp": "~0.3.0"
     },
     "devDependencies": {
         "jshint": "0.2.x"
     },
     "scripts": {
         "start": "./index.js",
-        "test": "expresso",
+        "test": "mocha --ignore-leaks --timeout 10000",
         "postinstall": "GITPATH=/usr/bin:/usr/local/bin:/usr/local/git/bin\nPATH=$PATH:$GITPATH; export PATH\n\nif [ -z $( which git ) ]; then\n  echo \"Unable to find git binary in \\$GITPATH\"\n  exit 1\nfi\n\nSHORT_VERSION=$( git describe --tags )\nVERSION=$( echo $SHORT_VERSION | sed -e 's/^v//' | sed -e 's/-/./' | sed -e 's/-.*//' )\n\necho \"$SHORT_VERSION\n$VERSION\" > VERSION"
     },
     "bin": {
         "tilemill": "./index.js"
     },
-    "engines": { "node": "0.4.x" }
+    "engines": { "node": "0.6.x" }
 }

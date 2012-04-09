@@ -79,7 +79,23 @@ command.prototype.child = function(name) {
     Bones.plugin.children[name].stdout.pipe(process.stdout);
     Bones.plugin.children[name].stderr.pipe(process.stderr);
     Bones.plugin.children[name].once('exit', function(code, signal) {
-        if (code === 0) this.child(name);
+        if (code === 0) {
+            // restart server if exit was clean
+            console.warn('Restarting child process: "' + name + '"');
+            this.child(name);
+        } else {
+            if (signal) {
+                console.warn('Error: child process: "' + name + '" failed with signal "' + signal + '" and code "' + code + '"')
+                _(Bones.plugin.children).each(function(child) { child.kill(signal); });
+                process.kill(process.pid,signal);
+            } else {
+                // Note: it would be great, in many cases, to auto-restart here
+                // but we cannot because we will trigger recursion like in cases
+                // of failed startup due to EADDRINUSE
+                console.warn('Error: child process: "' + name + '" failed with code "' + code + '"')
+                _(Bones.plugin.children).each(function(child) { child.kill(); });
+            }
+        }
     }.bind(this));
 };
 
